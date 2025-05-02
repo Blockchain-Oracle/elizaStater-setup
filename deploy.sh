@@ -23,7 +23,8 @@ cd "$STARTER_DIR"
 pnpm install  # This will link the local plugin dependency
 pnpm run build
 
-# Call start.sh to build better-sqlite3
+# Make start.sh executable and call it to build better-sqlite3
+chmod +x ./start.sh
 ./start.sh
 
 echo "eliza-starter built successfully."
