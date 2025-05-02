@@ -24,6 +24,7 @@ pnpm install  # This will link the local plugin dependency
 pnpm run build
 
 # Make start.sh executable and call it to build better-sqlite3
+cd "$SCRIPT_DIR"
 chmod +x ./start.sh
 ./start.sh
 
