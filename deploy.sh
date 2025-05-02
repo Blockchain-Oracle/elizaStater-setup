@@ -23,11 +23,5 @@ cd "$STARTER_DIR"
 pnpm install  # This will link the local plugin dependency
 pnpm run build
 echo "eliza-starter built successfully."
-
-# --- Start the service ---
-echo "Starting eliza-starter service..."
-
-pnpm run start
-
 echo "Deployment script finished."
 
