@@ -17,8 +17,4 @@ cd ../../
 echo "Navigated back to eliza-starter"
 echo "Current directory: $(pwd)"
 
-# Echo current time
-echo "Starting application at: $(date)"
-
-# Start the application
-pnpm run start
+echo "better-sqlite3 build completed successfully"
