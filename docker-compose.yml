@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  eliza-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000" # Adjust if your app uses a different port
+    environment:
+      - NODE_ENV=production
+      # Add your required environment variables here
+      # - HEDERA_PRIVATE_KEY=
+      # - HEDERA_ACCOUNT_ID=
+      # - HEDERA_NETWORK_TYPE=
+      # - HEDERA_KEY_TYPE=
+    volumes:
+      # For persistence if needed
+      - ./data:/app/eliza-starter/data
+    restart: unless-stopped 
