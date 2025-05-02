@@ -122,13 +122,16 @@ const checkPortAvailable = (port: number): Promise<boolean> => {
       resolve(true);
     });
 
-    server.listen(port);
+    // Explicitly bind to 0.0.0.0 for Render compatibility
+    server.listen(port, "0.0.0.0");
   });
 };
 
 const startAgents = async () => {
   const directClient = new DirectClient();
-  let serverPort: number = parseInt(process.env.PORT || "3000");
+  // Always use PORT environment variable for Render
+  process.env.PORT = process.env.PORT || "3000";
+  let serverPort: number = parseInt(process.env.PORT);
   const args = parseArguments();
 
   let charactersArg = args.characters || args.character;
@@ -158,6 +161,8 @@ const startAgents = async () => {
     return startAgent(character, directClient);
   };
 
+  // Log that we're explicitly using the PORT env var for Render compatibility
+  console.log(`Starting server on port ${serverPort} (PORT=${process.env.PORT})`);
   directClient.start(serverPort);
 
   if (serverPort !== parseInt(settings.SERVER_PORT || "3000")) {

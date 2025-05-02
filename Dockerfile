@@ -18,6 +18,10 @@ ENV NPM_CONFIG_YES=true
 ENV PNPM_CONFIG_AUTO_INSTALL_PEERS=true
 ENV CI=true
 
+# Set Render-specific environment variables
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
 # Set working directory
 WORKDIR /app
 
@@ -47,7 +51,6 @@ RUN pnpm run build
 
 # Set environment to production
 ENV NODE_ENV=production
-
 
 # Command to run the application
 CMD ["pnpm", "run", "start"] 
