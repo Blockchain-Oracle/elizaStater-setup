@@ -20,7 +20,7 @@ ENV CI=true
 
 # Set Render-specific environment variables
 ENV HOST=0.0.0.0
-ENV PORT=3000
+ENV PORT=8080
 
 # Set working directory
 WORKDIR /app
