@@ -22,7 +22,7 @@ clients: ["twitter", "discord"]
 ## Duplicate the .env.example template
 
 ```bash
-cp .env.example .env
+cp .env.example .env 
 ```
 
 \* Fill out the .env file with your own values.

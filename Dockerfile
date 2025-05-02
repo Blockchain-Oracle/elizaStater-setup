@@ -48,5 +48,6 @@ RUN pnpm run build
 # Set environment to production
 ENV NODE_ENV=production
 
+
 # Command to run the application
 CMD ["pnpm", "run", "start"] 
