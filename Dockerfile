@@ -41,12 +41,12 @@ COPY eliza-starter ./eliza-starter
 
 # Build the Hedera plugin
 WORKDIR /app/eliza-plugin-hedera
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --force
 RUN pnpm run build
 
 # Build the Eliza starter (which includes the local plugin dependency)
 WORKDIR /app/eliza-starter
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --force
 
 # Build better-sqlite3 which needs special handling
 # Note: Each RUN command starts in the WORKDIR (/app/eliza-starter)
