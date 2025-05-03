@@ -54,29 +54,23 @@ WORKDIR /app/eliza-starter
 RUN pnpm install --force
 
 # Build better-sqlite3 which needs special handling
-# Note: Each RUN command starts in the WORKDIR (/app/eliza-starter)
 RUN cd node_modules/better-sqlite3 && npm run build-release
 
-# Build the starter application (runs in /app/eliza-starter)
+# Build the starter application
 RUN pnpm run build
+
+# Create data directory with proper permissions
+RUN mkdir -p /app/eliza-starter/data && \
+    chmod -R 777 /app/eliza-starter/data
 
 # Set environment to production
 ENV NODE_ENV=production
 
-# Create a non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-# Create and set permissions for data directory
-RUN mkdir -p /app/eliza-starter/data \
-    && touch /app/eliza-starter/data/eliza.db \
-    && chown -R appuser:appuser /app \
-    && chmod -R 777 /app/eliza-starter/data
-
 # Expose port 3000
 EXPOSE 3000
 
-# Switch to non-root user
-USER appuser
+# Make sure we're in the right directory
+WORKDIR /app/eliza-starter
 
-# Command to run the application with proper signal handling
+# Command to run the application
 CMD ["pnpm", "run", "start"] 
