@@ -6,20 +6,29 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000" # Adjust if your app uses a different port
+      - "3000:3000"
     environment:
       - NODE_ENV=production
-      # Add your required environment variables here
-      # - HEDERA_PRIVATE_KEY=
-      # - HEDERA_ACCOUNT_ID=
-      # - HEDERA_NETWORK_TYPE=
-      # - HEDERA_KEY_TYPE=
+      - HEDERA_ACCOUNT_ID=${HEDERA_ACCOUNT_ID}
+      - HEDERA_PRIVATE_KEY=${HEDERA_PRIVATE_KEY}
+      - HEDERA_PUBLIC_KEY=${HEDERA_PUBLIC_KEY}
+      - HEDERA_NETWORK_TYPE=${HEDERA_NETWORK_TYPE}
+      - HEDERA_KEY_TYPE=${HEDERA_KEY_TYPE}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SERVER_PORT=3000
+      - PORT=3000
+      - SQLITE_REBUILD=true
     volumes:
-      # For persistence if needed
       - ./data:/app/eliza-starter/data
+      - ./eliza-starter/.env:/app/eliza-starter/.env
     restart: unless-stopped
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:${PORT:-3000}"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
 
 networks:
   app-network:

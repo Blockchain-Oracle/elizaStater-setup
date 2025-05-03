@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     make \
     g++ \
     git \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm globally
@@ -40,12 +41,12 @@ COPY eliza-starter ./eliza-starter
 
 # Build the Hedera plugin
 WORKDIR /app/eliza-plugin-hedera
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 RUN pnpm run build
 
 # Build the Eliza starter (which includes the local plugin dependency)
 WORKDIR /app/eliza-starter
-RUN pnpm install 
+RUN pnpm install --frozen-lockfile
 
 # Build better-sqlite3 which needs special handling
 # Note: Each RUN command starts in the WORKDIR (/app/eliza-starter)
@@ -57,8 +58,15 @@ RUN pnpm run build
 # Set environment to production
 ENV NODE_ENV=production
 
+# Create a non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN mkdir -p /app/eliza-starter/data && chown -R appuser:appuser /app
+
 # Expose port 3000
 EXPOSE 3000
 
-# Command to run the application
-CMD ["pnpm", "run", "start"] 
+# Switch to non-root user
+USER appuser
+
+# Command to run the application with proper signal handling
+CMD ["node", "--loader", "ts-node/esm", "src/index.ts"] 
