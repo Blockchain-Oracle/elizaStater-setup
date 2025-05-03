@@ -18,17 +18,22 @@ services:
       - SERVER_PORT=3000
       - PORT=3000
       - SQLITE_REBUILD=true
+      - DAEMON_PROCESS=true
     volumes:
-      - ./data:/app/eliza-starter/data
+      - eliza_data:/app/eliza-starter/data
       - ./eliza-starter/.env:/app/eliza-starter/.env
     restart: unless-stopped
     networks:
       - app-network
-    # healthcheck:
-    #   test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:${PORT:-3000}"]
-    #   interval: 5s
-    #   timeout: 20s
-    #   retries: 10
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:${PORT:-3000}"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
+
+volumes:
+  eliza_data:
+    driver: local
 
 networks:
   app-network:

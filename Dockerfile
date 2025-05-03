@@ -27,6 +27,7 @@ ENV DISABLE_TOKENIZERS_NATIVE_LIBRARIES=true
 # Set Docker environment variable
 ENV DOCKER_ENVIRONMENT=true
 ENV DAEMON_PROCESS=true
+ENV SQLITE_REBUILD=true
 
 # Set Render-specific environment variables
 ENV HOST=0.0.0.0
@@ -64,12 +65,18 @@ ENV NODE_ENV=production
 
 # Create a non-root user
 RUN groupadd -r appuser && useradd -r -g appuser appuser
-RUN mkdir -p /app/eliza-starter/data && chown -R appuser:appuser /app
+
+# Create and set permissions for data directory
+RUN mkdir -p /app/eliza-starter/data \
+    && touch /app/eliza-starter/data/eliza.db \
+    && chown -R appuser:appuser /app \
+    && chmod -R 777 /app/eliza-starter/data
 
 # Expose port 3000
 EXPOSE 3000
 
 # Switch to non-root user
 USER appuser
+
 # Command to run the application with proper signal handling
 CMD ["pnpm", "run", "start"] 
