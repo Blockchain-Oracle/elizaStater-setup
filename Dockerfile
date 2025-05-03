@@ -24,6 +24,10 @@ ENV NODE_OPTIONS="--experimental-fetch"
 ENV TOKENIZERS_PARALLELISM=false
 ENV DISABLE_TOKENIZERS_NATIVE_LIBRARIES=true
 
+# Set Docker environment variable
+ENV DOCKER_ENVIRONMENT=true
+ENV DAEMON_PROCESS=true
+
 # Set Render-specific environment variables
 ENV HOST=0.0.0.0
 ENV PORT=3000
@@ -67,6 +71,5 @@ EXPOSE 3000
 
 # Switch to non-root user
 USER appuser
-
 # Command to run the application with proper signal handling
-CMD ["node", "--loader", "ts-node/esm", "src/index.ts"] 
+CMD ["pnpm", "run", "start"] 

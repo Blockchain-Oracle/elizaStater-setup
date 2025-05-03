@@ -27,6 +27,11 @@ import { initializeDatabase } from "./database/index.ts";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// In Docker, always run in daemon mode
+if (process.env.DOCKER_ENVIRONMENT === "true" || process.env.NODE_ENV === "production") {
+  process.env.DAEMON_PROCESS = "true";
+}
+
 export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
   const waitTime =
     Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
@@ -128,54 +133,77 @@ const checkPortAvailable = (port: number): Promise<boolean> => {
 };
 
 const startAgents = async () => {
-  const directClient = new DirectClient();
-  // Always use PORT environment variable for Render
-  process.env.PORT = process.env.PORT || "3000";
-  let serverPort: number = parseInt(process.env.PORT);
-  const args = parseArguments();
-
-  let charactersArg = args.characters || args.character;
-  let characters = [character];
-
-  console.log("charactersArg", charactersArg);
-  if (charactersArg) {
-    characters = await loadCharacters(charactersArg);
-  }
-  console.log("characters", characters);
   try {
+    const directClient = new DirectClient();
+    // Always use PORT environment variable for Render
+    process.env.PORT = process.env.PORT || "3000";
+    let serverPort: number = parseInt(process.env.PORT);
+    const args = parseArguments();
+
+    let charactersArg = args.characters || args.character;
+    let characters = [character];
+
+    console.log("charactersArg", charactersArg);
+    if (charactersArg) {
+      characters = await loadCharacters(charactersArg);
+    }
+    
+    // Start all agents
     for (const character of characters) {
       await startAgent(character, directClient as DirectClient);
     }
+
+    while (!(await checkPortAvailable(serverPort))) {
+      elizaLogger.warn(`Port ${serverPort} is in use, trying ${serverPort + 1}`);
+      serverPort++;
+    }
+
+    // upload some agent functionality into directClient
+    directClient.startAgent = async (character: Character) => {
+      // wrap it so we don't have to inject directClient later
+      return startAgent(character, directClient);
+    };
+
+    // Log that we're explicitly using the PORT env var for Render compatibility
+    console.log(`Starting server on port ${serverPort} (PORT=${process.env.PORT})`);
+    
+    try {
+      await directClient.start(serverPort);
+      
+      if (serverPort !== parseInt(settings.SERVER_PORT || "3000")) {
+        elizaLogger.log(`Server started on alternate port ${serverPort}`);
+      }
+
+      const isDaemonProcess = process.env.DAEMON_PROCESS === "true";
+      
+      // Only start chat if not running in daemon mode
+      if (!isDaemonProcess) {
+        elizaLogger.log("Chat started. Type 'exit' to quit.");
+        const chat = startChat(characters);
+        chat();
+      } else {
+        elizaLogger.log("Running in daemon mode - interactive chat disabled");
+      }
+    } catch (serverError) {
+      elizaLogger.error("Error starting server:", serverError);
+      process.exit(1);
+    }
   } catch (error) {
-    elizaLogger.error("Error starting agents:", error);
-  }
-
-  while (!(await checkPortAvailable(serverPort))) {
-    elizaLogger.warn(`Port ${serverPort} is in use, trying ${serverPort + 1}`);
-    serverPort++;
-  }
-
-  // upload some agent functionality into directClient
-  directClient.startAgent = async (character: Character) => {
-    // wrap it so we don't have to inject directClient later
-    return startAgent(character, directClient);
-  };
-
-  // Log that we're explicitly using the PORT env var for Render compatibility
-  console.log(`Starting server on port ${serverPort} (PORT=${process.env.PORT})`);
-  directClient.start(serverPort);
-
-  if (serverPort !== parseInt(settings.SERVER_PORT || "3000")) {
-    elizaLogger.log(`Server started on alternate port ${serverPort}`);
-  }
-
-  const isDaemonProcess = process.env.DAEMON_PROCESS === "true";
-  if(!isDaemonProcess) {
-    elizaLogger.log("Chat started. Type 'exit' to quit.");
-    const chat = startChat(characters);
-    chat();
+    elizaLogger.error("Unhandled error in startAgents:", error);
+    process.exit(1);
   }
 };
+
+// Add proper error handling for the main process
+process.on('uncaughtException', (error) => {
+  elizaLogger.error("Uncaught exception:", error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  elizaLogger.error("Unhandled rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
 
 startAgents().catch((error) => {
   elizaLogger.error("Unhandled error in startAgents:", error);
