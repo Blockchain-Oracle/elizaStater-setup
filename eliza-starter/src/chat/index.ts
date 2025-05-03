@@ -18,8 +18,8 @@ async function handleUserInput(input, agentId) {
   }
 
   try {
-    const serverPort = parseInt(settings.SERVER_PORT || "3000");
-
+    const serverPort = parseInt(process.env.PORT || "8080");
+    console.log(`http://localhost:${serverPort}/${agentId}/message`);
     const response = await fetch(
       `http://localhost:${serverPort}/${agentId}/message`,
       {
@@ -32,6 +32,7 @@ async function handleUserInput(input, agentId) {
         }),
       }
     );
+    console.log(response);
 
     const data = await response.json();
     data.forEach((message) => console.log(`${"Agent"}: ${message.text}`));

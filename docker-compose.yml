@@ -17,4 +17,10 @@ services:
     volumes:
       # For persistence if needed
       - ./data:/app/eliza-starter/data
-    restart: unless-stopped 
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge 

@@ -1,5 +1,5 @@
 # Use Node.js v22 as the base image
-FROM node:22-slim
+FROM --platform=linux/amd64 node:22-slim
 
 # Install build essentials for better-sqlite3
 RUN apt-get update && apt-get install -y \
@@ -18,9 +18,14 @@ ENV NPM_CONFIG_YES=true
 ENV PNPM_CONFIG_AUTO_INSTALL_PEERS=true
 ENV CI=true
 
+# Set environment variables for tokenizers
+ENV NODE_OPTIONS="--experimental-fetch"
+ENV TOKENIZERS_PARALLELISM=false
+ENV DISABLE_TOKENIZERS_NATIVE_LIBRARIES=true
+
 # Set Render-specific environment variables
 ENV HOST=0.0.0.0
-ENV PORT=8080
+ENV PORT=3000
 
 # Set working directory
 WORKDIR /app
@@ -35,12 +40,12 @@ COPY eliza-starter ./eliza-starter
 
 # Build the Hedera plugin
 WORKDIR /app/eliza-plugin-hedera
-RUN pnpm install --force
+RUN pnpm install
 RUN pnpm run build
 
 # Build the Eliza starter (which includes the local plugin dependency)
 WORKDIR /app/eliza-starter
-RUN pnpm install --force
+RUN pnpm install 
 
 # Build better-sqlite3 which needs special handling
 # Note: Each RUN command starts in the WORKDIR (/app/eliza-starter)
@@ -51,6 +56,9 @@ RUN pnpm run build
 
 # Set environment to production
 ENV NODE_ENV=production
+
+# Expose port 3000
+EXPOSE 3000
 
 # Command to run the application
 CMD ["pnpm", "run", "start"] 
