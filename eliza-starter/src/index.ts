@@ -22,6 +22,7 @@ import {
   loadCharacters,
   parseArguments,
 } from "./config/index.ts";
+import { hederaCredentialMiddleware } from "./config/credentialMiddleware.ts";
 import { initializeDatabase } from "./database/index.ts";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -139,6 +140,51 @@ const startAgents = async () => {
     process.env.PORT = process.env.PORT || "3000";
     let serverPort: number = parseInt(process.env.PORT);
     const args = parseArguments();
+    const startTime = Date.now();
+    
+    // Add general status endpoint
+    directClient.app.get('/status', (req: any, res: any) => {
+      // Use any casting to bypass type checking for internal implementation details
+      const dc = directClient as any;
+      const agentCount = dc.runtimes?.size || dc.agents?.size || 0;
+      
+      return res.status(200).json({
+        status: "active",
+        uptime: Math.floor((Date.now() - startTime) / 1000),
+        port: serverPort,
+        agentCount,
+        version: process.env.npm_package_version || "1.0.0"
+      });
+    });
+    
+    // Install our middleware to handle user-specific Hedera credentials
+    directClient.app.use('/:agentName/message', hederaCredentialMiddleware);
+
+    // Add status endpoint for specific agents
+    // directClient.app.get('/:agentName/status', (req: any, res: any) => {
+    //   const agentName = req.params.agentName;
+      
+    //   // Use any casting to bypass type checking for internal implementation details
+    //   const dc = directClient as any;
+    //   const agentExists = dc.runtimes?.has?.(agentName) || dc.agents?.has?.(agentName) || false;
+      
+    //   if (agentExists) {
+    //     return res.status(200).json({
+    //       status: "active",
+    //       name: agentName,
+    //       isAvailable: true,
+    //       uptime: Math.floor((Date.now() - startTime) / 1000),
+    //       version: process.env.npm_package_version || "1.0.0"
+    //     });
+    //   } else {
+    //     return res.status(404).json({
+    //       status: "not_found",
+    //       name: agentName,
+    //       isAvailable: false,
+    //       error: `Agent '${agentName}' not found`
+    //     });
+    //   }
+    // });
 
     let charactersArg = args.characters || args.character;
     let characters = [character];
